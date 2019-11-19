@@ -2,7 +2,7 @@
   "name": "ajax-graphql-form",
   "version": "1.0.0",
   "description": "Plugin vue para automatizar la recolección de datos de un formulario.",
-  "main": "AjaxForm.js",
+  "main": "./src/AjaxForm.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
