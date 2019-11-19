@@ -60,8 +60,43 @@ export const numbers = function(el, key, tag){
 export const selects = function(el, key, tag){
     let res = {};
 
-    if((el.tagName=="INPUT" && el.type=="select") || el.tagName=="SELECT"){
+    if((el.tagName=="SELECT" && el.type=="select") || el.tagName=="SELECT"){
         res[key] = el.value;
+        return res;
+    }
+
+    return false;
+}
+
+/**
+ * Resolver de elementos select multiple
+ * 
+ * @param {object} el   Elemento del DOM
+ * @param {string} key  Clave a definir en los datos de servidor
+ * @param {string} tag  Tag del componente vue sobre el que se aplicó
+ * @return {object}
+ */
+export const selectsMultiple = function(el, key, tag){
+    let res = {};
+
+    /**
+     * Guardamos las opciones seleccionadas en un array y posteriormente lo pasamos a object
+     */
+    if(el.tagName=="SELECT" && el.type=="select-multiple"){
+        let optionsSelected = [];
+        let options = el && el.options;
+        const selectLength = options.length;
+        let opt;
+
+        for(var i=0; i<selectLength; i++){
+            opt = options[i];
+
+            if(opt.selected) {
+                optionsSelected.push(opt.value || opt.text);
+            }
+        }
+
+        res[key] = Object.assign({...optionsSelected})
         return res;
     }
 

@@ -1,5 +1,5 @@
 import AjaxFormComponent from './components/AjaxForm.vue';
-import {communTypes, numbers, selects} from './resolvers.js'
+import {communTypes, numbers, selects, selectsMultiple} from './resolvers.js'
 
 const AjaxForm ={
     install(Vue, options){
@@ -33,6 +33,7 @@ const AjaxForm ={
             resolvers:[
                 communTypes,
                 numbers,
+                selectsMultiple,
                 selects
             ],
 

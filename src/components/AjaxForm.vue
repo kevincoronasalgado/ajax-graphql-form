@@ -17,6 +17,7 @@
 <script>
 import DeepMerge from '../DeepMerge.js';
 import axios from "axios";
+import gql from 'graphql-tag'
 
 export default {
     name:'AjaxForm',
@@ -29,6 +30,18 @@ export default {
 		 */
         id:{
             type: String
+        },
+
+        /**
+		 * Tipo de peticion:
+         * Peticion normal por ajax usando axios: 'form'
+         * Graphql usando apollo: 'graphql'
+         * 
+		 * @type {string}
+		 */
+        type: {
+            type: String,
+            default: 'form'
         },
 
         /**
@@ -53,6 +66,16 @@ export default {
         url:{
             type: String,
             default: null
+        },
+
+        /**
+		 * Mutation que se le pasara a graphql
+         * a traves de apollo
+         * 
+		 * @type {string}
+		 */
+        mutation:{
+            type: String,
         },
 
         /**
@@ -95,7 +118,7 @@ export default {
             identifier:null,
 
             /**
-             * Indica si el formulario est´pa en proceso de envio
+             * Indica si el formulario está en proceso de envio
              * o ya se está enviando
              * 
              * @type {boolean}
@@ -165,7 +188,7 @@ export default {
                 let key = node.getAttribute('data-ajaxform-key');
                 let tag = node.getAttribute('data-ajaxform-tag');
 
-                //Recorrer cada uno de los reslvers hasta encontrar
+                //Recorrer cada uno de los resolvers hasta encontrar
                 //el correcto, luego rompe ciclo
                 for (let index = 0; index < this.$ajaxForm.resolvers.length; index++) {
                     const resolver = this.$ajaxForm.resolvers[index];
@@ -190,38 +213,75 @@ export default {
 
             /**
              * Validar datos antes de enviar al servidor
+             *  TODO: validar si es funcion
              */
             if(this.validator && !this.validator(data)){
                 this.isSending = false;
                 this.$emit('validation-error', data);
+                console.log('VALIDATOOOORRR: ', this.validator);
                 return;
             }
         
             /**
              * Mutar datos antes de ser enviados
+             *  TODO: validar si es funcion
              */
             if(this.dataMutator){
                 data = this.dataMutator(data);
             }
 
-
+             /**
+             * Verifica si se envia al servidor o no
+             * 
+             */
             if(!this.sendToServer){
                 this.isSending = false;
                 this.$emit('completed', data);
                 return;
             }
 
-            axios({
-                method: this.method,
-                url: this.url,
-                data
-            }).then(response=>{
+            /**
+             * Verifica la forma en que se enviaran los datos
+             * y se envia al servidor
+             * 
+             */
+            if(this.type == 'form'){
+                axios({
+                    method: this.method,
+                    url: this.url,
+                    data
+                }).then(response=>{
+                    this.isSending = false;
+                    this.$emit('success', response);
+                }).catch(error=>{
+                    this.isSending = false;
+                    this.$emit('error', error);
+                });
+            }else if(this.type == 'graphql') {
+
+                if(!this.$apollo || !this.$apolloProvider){
+                    console.error('Apollo provider es necesario');
+                    this.isSending = false;
+                    return;
+                } 
+
+                let mutation = gql `${this.mutation}`;
+
+                this.$apollo.mutate({
+                    mutation: mutation,
+                    variables: data,
+                }).then(response => {
+                    this.isSending = false;
+                    this.$emit('success', response);
+                }).catch((error) => {
+                    this.isSending = false;
+                    this.$emit('error', error);
+                })
+                 
+            }else {
+                console.error('Debe elegir un tipo de peticion valida');
                 this.isSending = false;
-                this.$emit('success', response);
-            }).catch(error=>{
-                this.isSending = false;
-                this.$emit('error', error);
-            });
+            }
 
             console.log('sending', data);
         }
