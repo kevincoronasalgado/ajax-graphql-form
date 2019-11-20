@@ -213,21 +213,28 @@ export default {
 
             /**
              * Validar datos antes de enviar al servidor
-             *  TODO: validar si es funcion
+             * 
              */
             if(this.validator && !this.validator(data)){
-                this.isSending = false;
-                this.$emit('validation-error', data);
-                console.log('VALIDATOOOORRR: ', this.validator);
-                return;
+                if(typeof(this.validator === 'function')){
+                    this.isSending = false;
+                    this.$emit('validation-error', data);
+                    return;
+                }else{
+                    console.error("validator must be a function");
+                }
             }
         
             /**
              * Mutar datos antes de ser enviados
-             *  TODO: validar si es funcion
+             * 
              */
             if(this.dataMutator){
-                data = this.dataMutator(data);
+                if(typeof(this.dataMutator === 'function')){
+                    data = this.dataMutator(data);
+                }else{
+                    console.error("data-mutator must be a function");
+                }
             }
 
              /**
@@ -260,7 +267,7 @@ export default {
             }else if(this.type == 'graphql') {
 
                 if(!this.$apollo || !this.$apolloProvider){
-                    console.error('Apollo provider es necesario');
+                    console.error('Apollo provider is necessary');
                     this.isSending = false;
                     return;
                 } 
@@ -273,14 +280,15 @@ export default {
                 }).then(response => {
                     this.isSending = false;
                     this.$emit('success', response);
-                }).catch((error) => {
+                }).catch(error => {
                     this.isSending = false;
                     this.$emit('error', error);
                 })
                  
             }else {
-                console.error('Debe elegir un tipo de peticion valida');
+                console.error('You must choose a valid request type ("form" or "graphql")');
                 this.isSending = false;
+                return;
             }
 
             console.log('sending', data);
